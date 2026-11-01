@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Garantia de 7 dias — Kit MEI em Dia</title>
+<style>
+ body{font-family:system-ui,Arial,sans-serif;max-width:720px;margin:0 auto;padding:24px;color:#1b2430;line-height:1.55}
+ h1{color:#1F3A5F} label{display:block;margin-top:12px;font-weight:600} input,textarea{width:100%;padding:8px;font-size:1em;box-sizing:border-box}
+ button{margin-top:16px;padding:12px 22px;font-size:1em;border:0;border-radius:8px;background:#1F7A4D;color:#fff;font-weight:700} small{color:#667}
+</style>
+</head>
+<body>
+<h1>Garantia de 7 dias</h1>
+<p>Se o kit não serviu, você pode pedir o dinheiro de volta em até 7 dias depois da compra, sem precisar explicar muito. O reembolso é feito pelo Mercado Pago, na mesma forma de pagamento.</p>
+<form id="f">
+ <label for="pid">Número da operação (no comprovante do Mercado Pago)</label>
+ <input id="pid" inputmode="numeric" required>
+ <label for="contato">Seu e-mail ou WhatsApp para retorno</label>
+ <input id="contato" required maxlength="200">
+ <label for="motivo">O que não funcionou? (opcional)</label>
+ <textarea id="motivo" rows="3" maxlength="500"></textarea>
+ <button>Enviar pedido</button>
+</form>
+<p id="msg"></p>
+<p><small><a href="index.html">Voltar</a> · <a href="termos.html">Termos e privacidade</a></small></p>
+<script src="app.js"></script>
+<script>
+document.getElementById("f").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const msg = document.getElementById("msg");
+  const { status, dados } = await post("garantia", {
+    payment_id: document.getElementById("pid").value.trim(),
+    external_reference: localStorage.getItem("kitmei_ref") || undefined,
+    contato: document.getElementById("contato").value,
+    motivo: document.getElementById("motivo").value,
+  });
+  msg.textContent = dados.ok ? "Pedido registrado. Você recebe o retorno no contato informado." : "Não consegui registrar (" + (dados.erro || status) + "). Confira o número da operação.";
+});
+</script>
+</body>
+</html>

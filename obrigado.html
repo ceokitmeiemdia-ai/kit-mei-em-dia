@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Obrigado — Kit MEI em Dia</title>
+<style>
+ body{font-family:system-ui,Arial,sans-serif;max-width:720px;margin:0 auto;padding:24px;color:#1b2430;line-height:1.55}
+ h1{color:#1F3A5F} .btn{display:inline-block;background:#1F7A4D;color:#fff;padding:14px 26px;border-radius:8px;text-decoration:none;font-weight:700}
+ .box{background:#E8EEF6;border-radius:10px;padding:16px 20px;margin:20px 0} small{color:#667} input{padding:8px;font-size:1em}
+</style>
+</head>
+<body>
+<h1>Obrigado pela compra</h1>
+<div class="box" id="estado">Confirmando o seu pagamento…</div>
+<div id="manual" hidden>
+ <p>Se você já pagou e o botão não apareceu, digite o número da operação (está no comprovante do Mercado Pago):</p>
+ <p><input id="pid" inputmode="numeric" placeholder="Número da operação"> <button id="ok">Verificar</button></p>
+</div>
+<p><small>Problemas? <a href="garantia.html">Pedir devolução</a> · <a href="index.html">Voltar</a></small></p>
+<script src="app.js"></script>
+<script>
+const q = new URLSearchParams(location.search);
+const estado = document.getElementById("estado");
+const manual = document.getElementById("manual");
+const ref = q.get("external_reference") || localStorage.getItem("kitmei_ref");
+let pid = q.get("payment_id") || q.get("collection_id");
+let tentativas = 0;
+
+async function verificar() {
+  if (!pid || !ref) { estado.textContent = "Não achei o seu pagamento neste navegador."; manual.hidden = false; return; }
+  const { status, dados } = await post("download", { payment_id: pid, external_reference: ref });
+  if (dados.url) {
+    estado.innerHTML = '<p>Pagamento confirmado.</p><p><a class="btn" href="' + dados.url + '">Baixar o Kit MEI em Dia (.xlsx)</a></p><p><small>O link vale 2 minutos. Se expirar, atualize esta página.</small></p>';
+    return;
+  }
+  if (status === 402 && tentativas++ < 40) {
+    estado.textContent = "Pix ainda não confirmado. Assim que cair, o botão aparece aqui (esta página verifica sozinha).";
+    return setTimeout(verificar, 5000);
+  }
+  estado.textContent = status === 402 ? "O pagamento ainda não foi aprovado. Atualize esta página mais tarde." : "Não consegui liberar o arquivo para este pagamento (" + (dados.erro || "erro") + ").";
+  manual.hidden = false;
+}
+document.getElementById("ok").onclick = () => { pid = document.getElementById("pid").value.trim(); tentativas = 0; verificar(); };
+verificar();
+</script>
+</body>
+</html>
