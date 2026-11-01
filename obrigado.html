@@ -31,8 +31,10 @@ let tentativas = 0;
 async function verificar() {
   if (!pid || !ref) { estado.textContent = "Não achei o seu pagamento neste navegador."; manual.hidden = false; return; }
   const { status, dados } = await post("download", { payment_id: pid, external_reference: ref });
-  if (dados.url) {
-    estado.innerHTML = '<p>Pagamento confirmado.</p><p><a class="btn" href="' + dados.url + '">Baixar o Kit MEI em Dia (.xlsx)</a></p><p><small>O link vale 2 minutos. Se expirar, atualize esta página.</small></p>';
+  if (dados.arquivos) {
+    estado.innerHTML = '<p>Pagamento confirmado. Também enviamos o kit para o e-mail do pagamento (veja a caixa de entrada e o spam).</p>' +
+      dados.arquivos.map(a => '<p><a class="btn" href="' + a.url + '">Baixar ' + a.titulo + '</a></p>').join('') +
+      '<p><small>Os links desta página valem 10 minutos. Se expirarem, atualize esta página.</small></p>';
     return;
   }
   if (status === 402 && tentativas++ < 40) {
